@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: shippingservice
+        image: abrampers/shippingservice
         ports:
         - containerPort: 50051
         env:

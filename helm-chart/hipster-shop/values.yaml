@@ -1,0 +1,8 @@
+replicaCount: 1
+userCount: 10
+loadgenerator: True
+
+disableTracing: True
+disableProfiler: True
+disableDebugger: True
+disableStats: True

@@ -1,0 +1,7 @@
+Hello, welcome to Hipster-Shop.
+
+To access, run:
+
+  $ kubectl get service/frontend-external
+
+and access the external IP address.

@@ -19,8 +19,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: {{ include "hipster-shop.fullname" . }}-frontend
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: frontend
@@ -69,19 +72,21 @@ spec:
             value: "checkoutservice:5050"
           - name: AD_SERVICE_ADDR
             value: "adservice:9555"
+        {{- with .Values.disableTracing }}
           - name: DISABLE_TRACING
             value: "1"
+        {{- end }}
+        {{- with .Values.disableProfiler }}
           - name: DISABLE_PROFILER
             value: "1"
-          # - name: JAEGER_SERVICE_ADDR
-          #   value: "jaeger-collector:14268"
+        {{- end }}
           resources:
             requests:
               cpu: 100m
               memory: 64Mi
             limits:
-              cpu: 200m
-              memory: 128Mi
+              cpu: 1000m
+              memory: 4Gi
 ---
 apiVersion: v1
 kind: Service
@@ -112,8 +117,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: paymentservice
+  name: {{ include "hipster-shop.fullname" . }}-paymentservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: paymentservice
@@ -161,8 +169,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: checkoutservice
+  name: {{ include "hipster-shop.fullname" . }}-checkoutservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: checkoutservice
@@ -197,14 +208,18 @@ spec:
             value: "currencyservice:7000"
           - name: CART_SERVICE_ADDR
             value: "cartservice:7070"
+        {{- with .Values.disableStats }}
           - name: DISABLE_STATS
             value: "1"
+        {{- end }}
+        {{- with .Values.disableTracing }}
           - name: DISABLE_TRACING
             value: "1"
+        {{- end }}
+        {{- with .Values.disableProfiler }}
           - name: DISABLE_PROFILER
             value: "1"
-          # - name: JAEGER_SERVICE_ADDR
-          #   value: "jaeger-collector:14268"
+        {{- end }}
           resources:
             requests:
               cpu: 100m
@@ -226,10 +241,13 @@ spec:
     port: 5050
     targetPort: 5050
 ---
+{{- with .Values.loadgenerator }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: loadgenerator
+  name: {{ include "hipster-shop.fullname" . }}-loadgenerator
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -251,19 +269,22 @@ spec:
         - name: FRONTEND_ADDR
           value: "frontend:80"
         - name: USERS
-          value: "10"
+          value: "{{ .Values.userCount }}"
         resources:
           requests:
             cpu: 300m
             memory: 256Mi
           limits:
-            cpu: 500m
-            memory: 512Mi
+            cpu: 1000m
+            memory: 4Gi
+{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-cart
+  name: {{ include "hipster-shop.fullname" . }}-redis-cart
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -316,8 +337,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: productcatalogservice
+  name: {{ include "hipster-shop.fullname" . }}-productcatalogservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: productcatalogservice
@@ -335,14 +359,18 @@ spec:
         env:
         - name: PORT
           value: "3550"
+      {{- with .Values.disableStats }}
         - name: DISABLE_STATS
           value: "1"
+      {{- end }}
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
+      {{- end }}
+      {{- with .Values.disableProfiler }}
         - name: DISABLE_PROFILER
           value: "1"
-        # - name: JAEGER_SERVICE_ADDR
-        #   value: "jaeger-collector:14268"
+      {{- end }}
         readinessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:3550"]
@@ -373,8 +401,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shippingservice
+  name: {{ include "hipster-shop.fullname" . }}-shippingservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: shippingservice
@@ -391,14 +422,18 @@ spec:
         env:
         - name: PORT
           value: "50051"
+      {{- with .Values.disableStats }}
         - name: DISABLE_STATS
           value: "1"
+      {{- end }}
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
+      {{- end }}
+      {{- with .Values.disableProfiler }}
         - name: DISABLE_PROFILER
           value: "1"
-        # - name: JAEGER_SERVICE_ADDR
-        #   value: "jaeger-collector:14268"
+      {{- end }}
         readinessProbe:
           periodSeconds: 5
           exec:
@@ -430,8 +465,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: adservice
+  name: {{ include "hipster-shop.fullname" . }}-adservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: adservice
@@ -449,12 +487,14 @@ spec:
         env:
         - name: PORT
           value: "9555"
+      {{- with .Values.disableStats }}
         - name: DISABLE_STATS
           value: "1"
+      {{- end }}
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
-        #- name: JAEGER_SERVICE_ADDR
-        #  value: "jaeger-collector:14268"
+      {{- end }}
         resources:
           requests:
             cpu: 200m
@@ -489,8 +529,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: currencyservice
+  name: {{ include "hipster-shop.fullname" . }}-currencyservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: currencyservice
@@ -509,12 +552,18 @@ spec:
         env:
         - name: PORT
           value: "7000"
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
+      {{- end }}
+      {{- with .Values.disableProfiler }}
         - name: DISABLE_PROFILER
           value: "1"
-        # - name: DISABLE_DEBUGGER
-        #   value: "1"
+      {{- end }}
+      {{- with .Values.disableDebugger }}
+        - name: DISABLE_DEBUGGER
+          value: "1"
+      {{- end }}
         readinessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:7000"]
@@ -545,8 +594,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: recommendationservice
+  name: {{ include "hipster-shop.fullname" . }}-recommendationservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: recommendationservice
@@ -574,12 +626,18 @@ spec:
           value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
           value: "productcatalogservice:3550"
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
+      {{- end }}
+      {{- with .Values.disableProfiler }}
         - name: DISABLE_PROFILER
           value: "1"
-        # - name: DISABLE_DEBUGGER
-        #   value: "1"
+      {{- end }}
+      {{- with .Values.disableDebugger }}
+        - name: DISABLE_DEBUGGER
+          value: "1"
+      {{- end }}
         resources:
           requests:
             cpu: 100m
@@ -604,8 +662,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cartservice
+  name: {{ include "hipster-shop.fullname" . }}-cartservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: cartservice
@@ -660,8 +721,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emailservice
+  name: {{ include "hipster-shop.fullname" . }}-emailservice
+  labels:
+    {{- include "hipster-shop.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: emailservice
@@ -679,10 +743,14 @@ spec:
         env:
         - name: PORT
           value: "8080"
+      {{- with .Values.disableTracing }}
         - name: DISABLE_TRACING
           value: "1"
+      {{- end }}
+      {{- with .Values.disableProfiler }}
         - name: DISABLE_PROFILER
           value: "1"
+      {{- end }}
         readinessProbe:
           periodSeconds: 5
           exec:
